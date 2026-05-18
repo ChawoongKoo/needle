@@ -1,8 +1,9 @@
 "use client"
 import { AreaSeries, createChart, ColorType, IChartApi } from "lightweight-charts"
+import type { Time, CustomData, BarData, LineData,  HistogramData } from "lightweight-charts"
 import { useEffect, useRef, useState } from "react"
 
-async function getSP500Data() {
+async function getSP500Data() {//this gets the sp500 data from the kaggle csv
     const res = await fetch('/sp500_index.csv')
     const text = await res.text()
 
@@ -18,18 +19,49 @@ async function getSP500Data() {
 };
 
 export default function Chart () {
-        const containerRef = useRef<HTMLDivElement>(null)
-        const [response, setResponse] = useState("")
+        //create a reference for this container to refer to the dom element it sends.
+        const chartContainerRef = useRef<HTMLDivElement>(null)
+
+
+        //states related to input bar
+        const [showInput, setShowInput] = useState(false)
+        const [inputPos, setInputPos] = useState<{x: number, y: number} | null>(null)
+
+        //states related to information sent to llm
+        const [userMessage, setUserMessage] = useState("")
+        const [timeValue, setTimeValue] = useState<{ time: Time; value: CustomData<Time> | BarData<Time> | LineData<Time> | HistogramData<Time> | undefined } | null>(null)
+
+        //state for llm message
+        const [LLMresponse, setLLMResponse] = useState("")
+
+
+        async function sendUserMessage() {
+            if (!timeValue) return;
+            if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
+            setUserMessage("")
+            const res = await fetch("/api/llm", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({userMessage: userMessage, time: timeValue.time, value: timeValue.value})
+            });
+
+            const llm_response = await res.json();//get response
+            setLLMResponse(llm_response);
+            console.log("Sent llm response")
+            console.log(LLMresponse)
+        };
+
+
 
         useEffect(() => {
             let chart: IChartApi//create the chart so that it can be removed later in the cleanup function
 
             async function init() {//async since we need to fetch sp500 data
-                if (!containerRef.current) return
+                if (!chartContainerRef.current) return
                 
                 //set up chart//
                 const chartOptions = { layout: { textColor: 'black', background: { type: ColorType.Solid, color: 'white' }, attributionLogo: false } };
-                chart = createChart(containerRef.current, chartOptions)
+                chart = createChart(chartContainerRef.current, chartOptions)
 
                 const areaSeries = chart.addSeries(AreaSeries, {
                     lineColor: '#2962FF', topColor: '#2962FF',
@@ -45,19 +77,16 @@ export default function Chart () {
 
                 //LLM call//
                 //On click, i want llm call
-                chart.subscribeClick(async (param) =>{//adds a chart click listener
+                chart.subscribeDblClick(async (param) =>{//adds a chart click listener
                     if (!param.time) return
+                    if (!param.point) {setShowInput(false); return;}
                     // console.log(param.time);//param.time is the time at the click
 
-                    const res = await fetch("/api/llm", {//API CALL HERE. fetch message
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({time: param.time, value: param.seriesData.get(areaSeries)})
-                    });
-                    
-                    const llm_response = await res.json();//get response
-                    setResponse(llm_response);
-                    console.log(llm_response)
+                    //on click, show the input bar, set the time and value, and set the user's message
+                    setShowInput(true)
+                    setInputPos({ x: param.point.x, y: param.point.y })
+                    console.log(param.point.x, param.point.y)
+                    setTimeValue({time: param.time, value: param.seriesData.get(areaSeries)})
                 });
             }
             init()//call the async function since useeffect can't be async
@@ -65,5 +94,13 @@ export default function Chart () {
             return () => chart.remove()//cleanup function for chart.
         }, [])
 
-    return <div ref={containerRef} className="w-full h-full" />
+
+
+    return <>
+        <div ref={chartContainerRef} className="relative w-full h-full" />
+        {showInput && inputPos && <div className="text-red-300 absolute z-10" style={{ left: inputPos.x, top: inputPos.y }}>
+            <input value={userMessage} placeholder="What would you like to know?" onChange={e => setUserMessage(e.target.value)} className="bg-white border border-black p-1 w-57 text-black"/>
+            <button onClick={sendUserMessage}>Ask</button>
+        </div>}
+    </>
 }

@@ -4,10 +4,10 @@ import StatsRow from "./StatsRow";
 
 export default function ChartContainer() {
     return (
-        <div className="w-8/10">
-            <DashboardHeader />
+        <div className="w-8/10 h-3/10 relative">
+            {/* <DashboardHeader /> */}
             <Chart />
-            <StatsRow />
+            {/* <StatsRow /> */}
         </div>
     );
 }

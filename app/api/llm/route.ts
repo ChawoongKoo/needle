@@ -5,6 +5,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const {time, value} = body
     console.log(time, value.value)
+    
     //initiliaze new client object using my hugging face token from .env
     const client = new InferenceClient(process.env.HF_KEY);
 
@@ -12,8 +13,12 @@ export async function POST(request: Request) {
         model: "deepseek-ai/DeepSeek-V4-Flash:novita",
         messages: [
             {
+                role: "system",
+                content: "You are a financial analyst who has understanding of macro economics. Basically the policies and historical events that have affected every economic market."
+            },
+            {
                 role: "user",
-                content: `Repeat the day and value in plain words: ${time} ${value.value}`
+                content: `What caused the market to act in this behavior around this time?: ${time} ${value.value}`
             }
         ]
     })
