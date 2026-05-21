@@ -1,4 +1,5 @@
 import ChartContainer from "./components/ChartContainer";
+import ChatBox from "./components/ChatBox";
 
 export default function Home() {
     return (
@@ -7,6 +8,7 @@ export default function Home() {
             style={{ background: "var(--bg)" }}
         >
             <ChartContainer />
+            <ChatBox />
         </div>
     );
 }
