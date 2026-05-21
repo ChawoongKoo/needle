@@ -8,7 +8,6 @@ export default function Home() {
             style={{ background: "var(--bg)" }}
         >
             <ChartContainer />
-            <ChatBox />
         </div>
     );
 }
