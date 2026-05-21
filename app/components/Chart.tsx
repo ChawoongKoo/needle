@@ -18,7 +18,7 @@ async function getSP500Data() {//this gets the sp500 data from the kaggle csv
     return data
 };
 
-export default function Chart () {
+export default function Chart ({messages, setMessages}: {messages: string[], setMessages: React.Dispatch<React.SetStateAction<string[]>>}) {
         //create a reference for this container to refer to the dom element it sends.
         const chartContainerRef = useRef<HTMLDivElement>(null)
 
@@ -32,23 +32,29 @@ export default function Chart () {
         const [timeValue, setTimeValue] = useState<{ time: Time; value: CustomData<Time> | BarData<Time> | LineData<Time> | HistogramData<Time> | undefined } | null>(null)
 
         //state for llm message
-        const [LLMresponse, setLLMResponse] = useState("")
+        const [LLMResponse, setLLMResponse] = useState("")
 
 
         async function sendUserMessage() {
             if (!timeValue) return;
             if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
-            setUserMessage("")
+            
+            setMessages(prev => [...prev, userMessage])
+            
             const res = await fetch("/api/llm", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({userMessage: userMessage, time: timeValue.time, value: timeValue.value})
             });
 
+            setUserMessage("")
+
             const llm_response = await res.json();//get response
             setLLMResponse(llm_response);
+            setMessages(prev => [...prev, llm_response.content])
+            console.log(llm_response.content)
             console.log("Sent llm response")
-            console.log(LLMresponse)
+            console.log(llm_response)
         };
 
 
@@ -85,7 +91,6 @@ export default function Chart () {
                     //on click, show the input bar, set the time and value, and set the user's message
                     setShowInput(true)
                     setInputPos({ x: param.point.x, y: param.point.y })
-                    console.log(param.point.x, param.point.y)
                     setTimeValue({time: param.time, value: param.seriesData.get(areaSeries)})
                 });
             }
