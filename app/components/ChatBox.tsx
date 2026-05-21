@@ -13,14 +13,15 @@ export default function ChatBox() {
 
 
     return (
-        <>
-        <div>
-            {messages.map((msg, i) => (
-                <div key={i}>{msg}</div>
-            ))}
-        </div>
+    <>
     <div className="w-full h-full flex flex-col items-center justify-end">
-        <div className="bg-gray-400 w-full h-full"></div>
+        <div className="bg-gray-400 w-full h-full">
+            <div>
+                {messages.map((msg, i) => (
+                    <div key={i}>{msg}</div>
+                ))}
+            </div>
+        </div>
         <input value={userMessage} 
             placeholder="What do you want to know?" 
             onChange={e => setUserMessage(e.target.value)}
