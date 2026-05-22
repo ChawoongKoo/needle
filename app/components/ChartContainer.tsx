@@ -17,8 +17,8 @@ export default function ChartContainer() {
         <div className="w-8/10 h-3/10 relative">
             {/* <DashboardHeader /> */}
 
-            <Chart messages={messages} setMessages={setMessages} loading={loading} setLoading={setLoading} timeValue={timeValue} setTimeValue={setTimeValue}/>
-            <ChatBox messages={messages} setMessages={setMessages} loading={loading} setLoading={setLoading} timeValue={timeValue} setTimeValue={setTimeValue}/>
+            <Chart />
+            <ChatBox />
             {/* <StatsRow /> */}
         </div>
     );
