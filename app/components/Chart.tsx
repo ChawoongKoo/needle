@@ -31,7 +31,7 @@ export default function Chart ({messages, setMessages, loading, setLoading, time
 
         //states related to information sent to llm
         const [userMessage, setUserMessage] = useState("")
-        
+
         //state for llm message
         const [LLMResponse, setLLMResponse] = useState("")
 
@@ -113,5 +113,5 @@ export default function Chart ({messages, setMessages, loading, setLoading, time
                 loading ? "Thinking..." : "Ask"
             }</button>
         </div>}
-    </>//PREVENT THE ASK BUTTON FROM SPAM SENDINGGGGGGGG
+    </>
 }
