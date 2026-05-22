@@ -1,9 +1,7 @@
 "use client"
 import { AreaSeries, createChart, ColorType, IChartApi } from "lightweight-charts"
-import type { Time, CustomData, BarData, LineData,  HistogramData } from "lightweight-charts"
 import { useEffect, useRef, useState } from "react"
-
-type TimeValue = { time: Time; value: CustomData<Time> | BarData<Time> | LineData<Time> | HistogramData<Time> | undefined } | null
+import { useDashboardContext } from "../contexts/DashboardContext"
 
 async function getSP500Data() {//this gets the sp500 data from the kaggle csv
     const res = await fetch('/sp500_index.csv')
@@ -20,7 +18,12 @@ async function getSP500Data() {//this gets the sp500 data from the kaggle csv
     return data
 };
 
-export default function Chart ({messages, setMessages, loading, setLoading, timeValue, setTimeValue}: {messages: string[], setMessages: React.Dispatch<React.SetStateAction<string[]>>, loading: boolean, setLoading: React.Dispatch<React.SetStateAction<boolean>>, timeValue: TimeValue, setTimeValue: React.Dispatch<React.SetStateAction<TimeValue>>}) {
+export default function Chart () {
+        const context = useDashboardContext()
+        if (!context) {return}
+
+        const {setMessages, loading, setLoading, timeValue, setTimeValue} = context
+
         //create a reference for this container to refer to the dom element it sends.
         const chartContainerRef = useRef<HTMLDivElement>(null)
 
@@ -87,9 +90,8 @@ export default function Chart ({messages, setMessages, loading, setLoading, time
                 chart.subscribeDblClick(async (param) =>{//adds a chart click listener
                     if (!param.time) return
                     if (!param.point) {setShowInput(false); return;}
-                    // console.log(param.time);//param.time is the time at the click
 
-                    //on click, show the input bar, set the time and value, and set the user's message
+                    //on double click, show the input bar, set the time and value, and set the user's message
                     setShowInput(true)
                     setInputPos({ x: param.point.x, y: param.point.y })
                     setTimeValue({time: param.time, value: param.seriesData.get(areaSeries)})

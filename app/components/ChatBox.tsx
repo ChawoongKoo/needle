@@ -1,16 +1,15 @@
 "use client"
-import { useState, useEffect } from "react";
-import type { Time, CustomData, BarData, LineData,  HistogramData } from "lightweight-charts"
+import { useState } from "react";
+import { useDashboardContext } from "../contexts/DashboardContext";
 
-type TimeValue = { time: Time; value: CustomData<Time> | BarData<Time> | LineData<Time> | HistogramData<Time> | undefined } | null
-
-export default function ChatBox({messages, setMessages, loading, setLoading, timeValue, setTimeValue}: {messages: string[], setMessages: React.Dispatch<React.SetStateAction<string[]>>, loading: boolean, setLoading: React.Dispatch<React.SetStateAction<boolean>>, timeValue: TimeValue, setTimeValue: React.Dispatch<React.SetStateAction<TimeValue>>}) {
+export default function ChatBox() {
+    const context = useDashboardContext()
+    if (!context) return;
+    const {messages, setMessages, loading, setLoading, timeValue} = context
 
     async function sendUserMessage() {
-
         if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
         if (!timeValue) {return}
-
 
         setMessages(prev => [...prev, userMessage])
         setLoading(true)
