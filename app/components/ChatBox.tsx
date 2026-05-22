@@ -5,32 +5,7 @@ import { useDashboardContext } from "../contexts/DashboardContext";
 export default function ChatBox() {
     const context = useDashboardContext()
     if (!context) return;
-    const {messages, setMessages, loading, setLoading, timeValue} = context
-
-    async function sendUserMessage() {
-        if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
-        if (!timeValue) {return}
-
-        setMessages(prev => [...prev, userMessage])
-        setLoading(true)
-
-        const res = await fetch("/api/llm", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({userMessage: userMessage, time: timeValue.time, value: timeValue.value})
-        });
-
-        setLoading(false)
-        setUserMessage("")
-
-        const llm_response = await res.json();//get response
-        setLLMResponse(llm_response);
-        setMessages(prev => [...prev, llm_response.content])
-        console.log(llm_response.content)
-        console.log("Sent llm response")
-        console.log(llm_response)
-    };
-
+    const {messages, setMessages, loading, setLoading, timeValue, sendUserMessage} = context
 
     //states related to information sent to llm
     const [userMessage, setUserMessage] = useState<string>("")
@@ -52,7 +27,7 @@ export default function ChatBox() {
             placeholder="What do you want to know?" 
             disabled={loading}
             onChange={e => setUserMessage(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') sendUserMessage() }}
+            onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
             className="bg-gray-600 w-5/10 ">
         </input>
     </div>

@@ -22,7 +22,7 @@ export default function Chart () {
         const context = useDashboardContext()
         if (!context) {return}
 
-        const {setMessages, loading, setLoading, timeValue, setTimeValue} = context
+        const {setMessages, loading, setLoading, timeValue, setTimeValue, sendUserMessage} = context
 
         //create a reference for this container to refer to the dom element it sends.
         const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -37,30 +37,6 @@ export default function Chart () {
 
         //state for llm message
         const [LLMResponse, setLLMResponse] = useState("")
-
-
-        async function sendUserMessage() {
-            if (!timeValue) return;
-            if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
-            
-            setMessages(prev => [...prev, userMessage])
-            setLoading(true)
-            const res = await fetch("/api/llm", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({userMessage: userMessage, time: timeValue.time, value: timeValue.value})
-            });
-            setLoading(false)
-            setUserMessage("")
-
-            const llm_response = await res.json();//get response
-            setLLMResponse(llm_response);
-            setMessages(prev => [...prev, llm_response.content])
-            console.log(llm_response.content)
-            console.log("Sent llm response")
-            console.log(llm_response)
-        };
-
 
 
         useEffect(() => {
@@ -111,7 +87,7 @@ export default function Chart () {
             onChange={e => setUserMessage(e.target.value)} 
             className="bg-white border border-black p-1 w-57 text-black"/>
 
-            <button onClick={sendUserMessage} disabled={loading}>{
+            <button onClick={() => sendUserMessage(userMessage, setUserMessage)} disabled={loading}>{
                 loading ? "Thinking..." : "Ask"
             }</button>
         </div>}

@@ -11,6 +11,7 @@ type DashboardContextType = {
     setTimeValue: React.Dispatch<React.SetStateAction<TimeValue | null>>
     loading: boolean
     setLoading: React.Dispatch<React.SetStateAction<boolean>>
+    sendUserMessage: ( userMessage: string, setUserMessage: React.Dispatch<React.SetStateAction<string>> ) => Promise<void>
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null)
@@ -29,8 +30,31 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
     //loading state for disabling spam calls
     const [loading, setLoading] = useState(false)
 
+    async function sendUserMessage( userMessage: string, setUserMessage: React.Dispatch<React.SetStateAction<string>>) {
+        if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
+        if (!timeValue) {return}
+
+        setMessages(prev => [...prev, userMessage])
+        setLoading(true)
+
+        const res = await fetch("/api/llm", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({userMessage: userMessage, time: timeValue.time, value: timeValue.value})
+        });
+
+        setLoading(false)
+        setUserMessage("")
+
+        const llm_response = await res.json();//get response
+        setMessages(prev => [...prev, llm_response.content])
+        console.log(llm_response.content)
+        console.log("Sent llm response")
+        console.log(llm_response)
+    };
+
     return(
-        <DashboardContext.Provider value={{messages, setMessages, timeValue, setTimeValue, loading, setLoading}}>
+        <DashboardContext.Provider value={{messages, setMessages, timeValue, setTimeValue, loading, setLoading, sendUserMessage}}>
             {children}
         </DashboardContext.Provider>
     )
