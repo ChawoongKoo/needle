@@ -22,7 +22,7 @@ export default function Chart () {
         const context = useDashboardContext()
         if (!context) {return}
 
-        const {setMessages, loading, setLoading, timeValue, setTimeValue, sendUserMessage} = context
+        const {loading, setTimeValue, sendUserMessage} = context
 
         //create a reference for this container to refer to the dom element it sends.
         const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -34,9 +34,6 @@ export default function Chart () {
 
         //states related to information sent to llm
         const [userMessage, setUserMessage] = useState("")
-
-        //state for llm message
-        const [LLMResponse, setLLMResponse] = useState("")
 
 
         useEffect(() => {

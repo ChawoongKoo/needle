@@ -5,13 +5,11 @@ import { useDashboardContext } from "../contexts/DashboardContext";
 export default function ChatBox() {
     const context = useDashboardContext()
     if (!context) return;
-    const {messages, setMessages, loading, setLoading, timeValue, sendUserMessage} = context
+    const {messages, loading, sendUserMessage} = context
 
     //states related to information sent to llm
     const [userMessage, setUserMessage] = useState<string>("")
 
-    //state for llm message
-    const [LLMresponse, setLLMResponse] = useState("")
 
     return (
     <>
