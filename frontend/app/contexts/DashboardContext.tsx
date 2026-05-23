@@ -34,13 +34,14 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
         if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
         if (!timeValue) {return}
 
-        setMessages(prev => [...prev, {role: "user", content: userMessage}])
+        const updatedMessages = [...messages, {role: "user", content: userMessage}]
+        setMessages(updatedMessages)
         setLoading(true)
 
         const res = await fetch("/api/llm", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({userMessage: userMessage, time: timeValue.time, value: timeValue.value})
+            body: JSON.stringify({messages: updatedMessages, time: timeValue.time, value: timeValue.value})
         });
 
         setLoading(false)
