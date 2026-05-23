@@ -5,8 +5,8 @@ import type { Time, CustomData, BarData, LineData,  HistogramData } from "lightw
 type TimeValue = { time: Time; value: CustomData<Time> | BarData<Time> | LineData<Time> | HistogramData<Time> | undefined } | null
 
 type DashboardContextType = {
-    messages: string[]
-    setMessages: React.Dispatch<React.SetStateAction<string[]>>
+    messages: {role: string, content: string}[]
+    setMessages: React.Dispatch<React.SetStateAction<{role: string, content: string}[]>>
     timeValue: TimeValue | null
     setTimeValue: React.Dispatch<React.SetStateAction<TimeValue | null>>
     loading: boolean
@@ -22,7 +22,7 @@ export function useDashboardContext(){
 
 export default function DashboardProvider( {children}: {children: React.ReactNode} ) {
     //messages containing both user and llm messages
-    const [messages, setMessages] = useState<string[]>([])
+    const [messages, setMessages] = useState<{role: string, content: string}[]>([])
 
     //time and value for question context
     const [timeValue, setTimeValue] = useState<{ time: Time; value: CustomData<Time> | BarData<Time> | LineData<Time> | HistogramData<Time> | undefined } | null>(null)
@@ -34,7 +34,7 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
         if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
         if (!timeValue) {return}
 
-        setMessages(prev => [...prev, userMessage])
+        setMessages(prev => [...prev, {role: "user", content: userMessage}])
         setLoading(true)
 
         const res = await fetch("/api/llm", {
@@ -47,7 +47,7 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
         setUserMessage("")
 
         const llm_response = await res.json();//get response
-        setMessages(prev => [...prev, llm_response.content])
+        setMessages(prev => [...prev, {role: "assistant", content: llm_response.content}])
         console.log(llm_response.content)
         console.log("Sent llm response")
         console.log(llm_response)
