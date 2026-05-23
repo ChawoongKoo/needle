@@ -16,8 +16,8 @@ export default function ChatBox() {
     <div className="w-full h-full flex flex-col items-center justify-end">
         <div className="bg-gray-400 w-full h-full">
             <div className="overflow-y-auto h-full">
-                {messages.map((msg, i) => (
-                    <div key={i}>{msg}</div>
+                {messages.map((obj, i) => (
+                    <div key={i} className={obj.role=== "user" ? "text-right" : "text-left"}>{obj.content}</div>
                 ))}
             </div>
         </div>
