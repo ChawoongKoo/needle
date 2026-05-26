@@ -42,4 +42,7 @@ db = create_client(supabase_url=settings.SUPABASE_URL, supabase_key=settings.SUP
 us_economic_history = get_wikipedia_page("Economic history of the United States")
 db.table("documents").insert(us_economic_history).execute()#keep supabase titles lowercase by default
 
+for chunk in chunk_text(str(us_economic_history)):
+    db.table("chunks").insert(chunk).execute()
+
 embed("hello world")
