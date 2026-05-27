@@ -21,7 +21,7 @@ def get_wikipedia_page(title: str) -> dict:
         "source": page.fullurl
     }
 
-def embed(text: str):
+def embed(text: str) -> list:
     #For query embeds, use a prompt like:
     #"Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: What is the capital of China?"
 
@@ -29,7 +29,7 @@ def embed(text: str):
     if not model:
         raise ValueError("Model not loaded")
     embedding = model.encode(text)
-    return embedding
+    return embedding.tolist()
 
 def chunk_text(text: str, size=500, overlap=50) -> list[str]:
     words = text.split()
@@ -39,10 +39,20 @@ def chunk_text(text: str, size=500, overlap=50) -> list[str]:
     ]
 
 db = create_client(supabase_url=settings.SUPABASE_URL, supabase_key=settings.SUPABASE_SECRET)
-us_economic_history = get_wikipedia_page("Economic history of the United States")
-db.table("documents").insert(us_economic_history).execute()#keep supabase titles lowercase by default
 
-for chunk in chunk_text(str(us_economic_history)):
-    db.table("chunks").insert(chunk).execute()
+if not db.table("documents").select("id").eq("title", "Economic history of the United States").execute().data: #if the document does not exist
+    us_economic_history = get_wikipedia_page("Economic history of the United States")
+    db.table("documents").insert(us_economic_history).execute()#keep supabase table titles lowercase by default
 
-embed("hello world")
+if not db.table("chunks").select("id").eq("document_id", 1).execute().data:
+    chunked_text = chunk_text(str(us_economic_history))
+
+    from tqdm import tqdm
+    for i, chunk in tqdm(enumerate(chunked_text), total=len(chunked_text), desc="Inserting Chunks..."):
+        entry = {
+            "document_id": 1,
+            "chunk_index": i,
+            "content": chunked_text[i],
+            "embedding": embed(chunked_text[i]),
+        }
+        db.table("chunks").insert(entry).execute()
