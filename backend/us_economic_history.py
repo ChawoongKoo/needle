@@ -28,7 +28,7 @@ def embed(text: str) -> list:
     #For document embedding, it's fine to just embed it as is.
     if not model:
         raise ValueError("Model not loaded")
-    embedding = model.encode(text)
+    embedding = model.encode(text, prompt_name="document")
     return embedding.tolist()
 
 def chunk_text(text: str, size=500, overlap=50) -> list[str]:
@@ -39,9 +39,8 @@ def chunk_text(text: str, size=500, overlap=50) -> list[str]:
     ]
 
 db = create_client(supabase_url=settings.SUPABASE_URL, supabase_key=settings.SUPABASE_SECRET)
-
+us_economic_history = get_wikipedia_page("Economic history of the United States")
 if not db.table("documents").select("id").eq("title", "Economic history of the United States").execute().data: #if the document does not exist
-    us_economic_history = get_wikipedia_page("Economic history of the United States")
     db.table("documents").insert(us_economic_history).execute()#keep supabase table titles lowercase by default
 
 if not db.table("chunks").select("id").eq("document_id", 1).execute().data:
