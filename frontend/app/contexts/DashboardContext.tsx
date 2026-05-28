@@ -49,9 +49,9 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
 
         const llm_response = await res.json();//get response
         setMessages(prev => [...prev, {role: "assistant", content: llm_response.content}])
-        console.log(llm_response.content)
+        // console.log(llm_response.content)
         console.log("Sent llm response")
-        console.log(llm_response)
+        // console.log(llm_response)
     };
 
     return(
