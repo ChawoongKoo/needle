@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const {matches} = await query_matches.json()
     console.log(matches)
 
-    const res = await client.chatCompletion({
+    const stream = client.chatCompletionStream({
         model: "deepseek-ai/DeepSeek-V4-Flash:novita",
         messages: [
             {
@@ -41,5 +41,18 @@ export async function POST(request: Request) {
         ]
     })
 
-    return Response.json(res.choices[0].message)
+    const encoder = new TextEncoder()
+    const stream_body = new ReadableStream({
+        async start(controller) {
+            for await (const chunk of stream){
+                const text = chunk.choices[0]?.delta?.content
+                if (text) controller.enqueue(encoder.encode(text))
+            }
+            controller.close()
+        }}
+    )
+
+    return new Response(stream_body, {
+        headers: { "Content-Type": "text/plain; charset=utf-8" }
+    })
 };

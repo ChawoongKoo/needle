@@ -38,17 +38,33 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
         setMessages(updatedMessages)
         setLoading(true)
 
-        const res = await fetch("/api/llm", {
+        //this is a stream
+        const stream_body = await fetch("/api/llm", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({messages: updatedMessages, time: timeValue.time, value: timeValue.value})
         });
 
-        setLoading(false)
         setUserMessage("")
 
-        const llm_response = await res.json();//get response
-        setMessages(prev => [...prev, {role: "assistant", content: llm_response.content}])
+
+        const reader = stream_body.body!.getReader();//get reader from the stream
+        setMessages(prev => [...prev, {role: "assistant", content: ""}])//initialize the empty llm response
+
+        const decoder = new TextDecoder()
+        while (true) {
+            const {done, value} = await reader.read()
+            if (done) break
+            const text = decoder.decode(value)
+            console.log(performance.now().toFixed(0), JSON.stringify(text))   // ← add this
+            setMessages( prev => {
+                const last = prev.at(-1)!//have to create a copy since i cannot reference the old object at all, even as a shallow copy
+                const updated_last = {role: "assistant", content: last.content+text}
+                return [...prev.slice(0, -1), updated_last]//create a new object with all the previous objects and the new last 
+            })
+        }
+
+        setLoading(false)
         // console.log(llm_response.content)
         console.log("Sent llm response")
         // console.log(llm_response)
