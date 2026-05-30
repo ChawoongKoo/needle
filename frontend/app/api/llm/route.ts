@@ -8,13 +8,14 @@ export async function POST(request: Request) {
     
     //initiliaze new client object using my hugging face token from .env
     const client = new InferenceClient(process.env.HF_KEY);
-
+    console.log(`${messages.at(-1).content}. Date of SP500: ${time}, Value of SP500 on that date: ${value.value}`)
+    
     //embed user query here//
     const query_matches = await fetch(`${process.env.BACKEND_ENDPOINT}/query_matches`,{
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-            message: `${messages.at(-1).content} Date: ${time} Value: ${value}`
+            message: `${messages.at(-1).content}. Date of SP500: ${time}, Value of SP500 on that date: ${value.value}`
         })
     })
 
