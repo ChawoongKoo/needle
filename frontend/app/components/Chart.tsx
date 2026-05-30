@@ -43,7 +43,11 @@ export default function Chart () {
                 if (!chartContainerRef.current) return
                 
                 //set up chart//
-                const chartOptions = { layout: { textColor: 'black', background: { type: ColorType.Solid, color: 'white' }, attributionLogo: false } };
+                const chartOptions = { 
+                    layout: { textColor: 'black', background: { type: ColorType.Solid, color: 'white' }, attributionLogo: false },
+                    handleScroll: false, //this removes default scrolling and scaling
+                    handleScale: false 
+                };
                 chart = createChart(chartContainerRef.current, chartOptions)
 
                 const areaSeries = chart.addSeries(AreaSeries, {
@@ -57,6 +61,21 @@ export default function Chart () {
                 
                 areaSeries.setData(sp500data);
                 chart.timeScale().fitContent();//fits the data to time scale
+
+                //enable scrolling and scaling//
+                //on right click, i want panning
+                const ts = chart.timeScale()//timescale object to alter x axis
+                chartContainerRef.current.addEventListener('contextmenu', (event) => { event.preventDefault() })
+
+                chartContainerRef.current.addEventListener('mousemove', (event) => {
+                    if (event.buttons !== 2) return
+
+                    const delta = event.movementX/ts.options().barSpacing
+                    ts.setVisibleLogicalRange({
+                        from: ts.getVisibleLogicalRange().from - delta,
+                        to: ts.getVisibleLogicalRange().to - delta
+                    })
+                })
 
                 //LLM call//
                 //On click, i want llm call
