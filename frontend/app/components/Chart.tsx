@@ -103,7 +103,11 @@ export default function Chart () {
             onChange={e => setUserMessage(e.target.value)} 
             className="bg-white border border-black p-1 w-57 text-black"/>
 
-            <button onClick={() => sendUserMessage(userMessage, setUserMessage)} disabled={loading}>{
+            <button 
+            onClick={() => sendUserMessage(userMessage, setUserMessage)}
+            onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
+            disabled={loading}
+            >{
                 loading ? "Thinking..." : "Ask"
             }</button>
         </div>}
