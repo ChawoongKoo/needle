@@ -101,11 +101,11 @@ export default function Chart () {
         {showInput && inputPos && <div className="text-red-300 absolute z-10" style={{ left: inputPos.x, top: inputPos.y }}>
             <input value={userMessage} placeholder="What would you like to know?" 
             onChange={e => setUserMessage(e.target.value)} 
+            onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
             className="bg-white border border-black p-1 w-57 text-black"/>
 
             <button 
             onClick={() => sendUserMessage(userMessage, setUserMessage)}
-            onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
             disabled={loading}
             >{
                 loading ? "Thinking..." : "Ask"
