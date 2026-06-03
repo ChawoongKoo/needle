@@ -21,16 +21,16 @@ export default function ChatBox() {
                 ))}
             </div>
         </div>
-        <div className="flex-row w-full text-center">
+        <div className="flex w-full text-center">
             <input value={userMessage} 
                 placeholder="What do you want to know?" 
                 disabled={loading}
                 onChange={e => setUserMessage(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
-                className="bg-gray-600 w-9/10 flex-1">
+                className="bg-gray-600 flex-1">
             </input>
             <button 
-                className=""
+                className="shrink-0"
                 onClick={() => sendUserMessage(userMessage, setUserMessage)}
                 disabled={loading}
                 >{
