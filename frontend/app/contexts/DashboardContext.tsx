@@ -68,6 +68,7 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
         // console.log(llm_response.content)
         console.log("Sent llm response")
         // console.log(llm_response)
+        console.log(messages)
     };
 
     return(
