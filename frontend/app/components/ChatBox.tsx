@@ -21,13 +21,23 @@ export default function ChatBox() {
                 ))}
             </div>
         </div>
-        <input value={userMessage} 
-            placeholder="What do you want to know?" 
-            disabled={loading}
-            onChange={e => setUserMessage(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
-            className="bg-gray-600 w-5/10 ">
-        </input>
+        <div className="flex-row w-full text-center">
+            <input value={userMessage} 
+                placeholder="What do you want to know?" 
+                disabled={loading}
+                onChange={e => setUserMessage(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
+                className="bg-gray-600 w-9/10 flex-1">
+            </input>
+            <button 
+                className=""
+                onClick={() => sendUserMessage(userMessage, setUserMessage)}
+                disabled={loading}
+                >{
+                    loading ? "Thinking..." : "Ask"
+                }
+            </button>
+        </div>
     </div>
     </>)
 }
