@@ -11,6 +11,8 @@ type DashboardContextType = {
     setTimeValue: React.Dispatch<React.SetStateAction<TimeValue | null>>
     loading: boolean
     setLoading: React.Dispatch<React.SetStateAction<boolean>>
+    selectedPoints: {time: string, value: number}[]
+    setSelectedPoints: React.Dispatch<React.SetStateAction<{time: string, value: number}[]>>
     sendUserMessage: ( userMessage: string, setUserMessage: React.Dispatch<React.SetStateAction<string>> ) => Promise<void>
 }
 
@@ -30,9 +32,12 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
     //loading state for disabling spam calls
     const [loading, setLoading] = useState(false)
 
+    //datapoints captured by the marquee selection on the chart
+    const [selectedPoints, setSelectedPoints] = useState<{time: string, value: number}[]>([])
+
     async function sendUserMessage( userMessage: string, setUserMessage: React.Dispatch<React.SetStateAction<string>>) {
         if (!userMessage) {setUserMessage(""); console.log("no user message"); return;}
-        if (!timeValue) {return}
+        if (!timeValue && selectedPoints.length === 0) {return}
 
         const updatedMessages = [...messages, {role: "user", content: userMessage}]
         setMessages(updatedMessages)
@@ -42,7 +47,7 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
         const stream_body = await fetch("/api/llm", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({messages: updatedMessages, time: timeValue.time, value: timeValue.value})
+            body: JSON.stringify({messages: updatedMessages, time: timeValue?.time, value: timeValue?.value, selectedPoints})
         });
 
         setUserMessage("")
@@ -64,6 +69,7 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
             })
         }
 
+        setSelectedPoints([])//clear the marquee selection once it has been sent
         setLoading(false)
         // console.log(llm_response.content)
         console.log("Sent llm response")
@@ -72,7 +78,7 @@ export default function DashboardProvider( {children}: {children: React.ReactNod
     };
 
     return(
-        <DashboardContext.Provider value={{messages, setMessages, timeValue, setTimeValue, loading, setLoading, sendUserMessage}}>
+        <DashboardContext.Provider value={{messages, setMessages, timeValue, setTimeValue, loading, setLoading, selectedPoints, setSelectedPoints, sendUserMessage}}>
             {children}
         </DashboardContext.Provider>
     )

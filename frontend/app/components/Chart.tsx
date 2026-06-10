@@ -22,7 +22,7 @@ export default function Chart () {
         const context = useDashboardContext()
         if (!context) {return}
 
-        const {loading, setTimeValue, sendUserMessage} = context
+        const {loading, setTimeValue, setSelectedPoints, sendUserMessage} = context
 
         //create a reference for this container to refer to the dom element it sends.
         const chartContainerRef = useRef<HTMLDivElement>(null)
@@ -35,9 +35,13 @@ export default function Chart () {
         //states related to information sent to llm
         const [userMessage, setUserMessage] = useState("")
 
+        //marquee selection rectangle drawn while left-click dragging
+        const [selectRect, setSelectRect] = useState<{left: number, top: number, width: number, height: number} | null>(null)
+
 
         useEffect(() => {
             let chart: IChartApi//create the chart so that it can be removed later in the cleanup function
+            const listenerCleanup = new AbortController()//removes the marquee listeners in the cleanup function
 
             async function init() {//async since we need to fetch sp500 data
                 if (!chartContainerRef.current) return
@@ -77,6 +81,60 @@ export default function Chart () {
                     })
                 })
 
+                //Marquee select//
+                //on left-click drag, draw a rectangle; on release, select all datapoints inside it
+                const el = chartContainerRef.current
+                const signal = listenerCleanup.signal
+                let isSelecting = false
+                let selStartX = 0, selStartY = 0
+
+                el.addEventListener('mousedown', (event) => {
+                    if (event.button !== 0) return//left button only, right button pans
+                    const rect = el.getBoundingClientRect()
+                    isSelecting = true
+                    selStartX = event.clientX - rect.left
+                    selStartY = event.clientY - rect.top
+                }, { signal })
+
+                //move and up live on window so the drag keeps working if the cursor leaves the chart
+                window.addEventListener('mousemove', (event) => {
+                    if (!isSelecting) return
+                    const rect = el.getBoundingClientRect()
+                    const x = event.clientX - rect.left
+                    const y = event.clientY - rect.top
+                    setSelectRect({
+                        left: Math.min(selStartX, x),
+                        top: Math.min(selStartY, y),
+                        width: Math.abs(x - selStartX),
+                        height: Math.abs(y - selStartY)
+                    })
+                }, { signal })
+
+                window.addEventListener('mouseup', (event) => {
+                    if (!isSelecting) return
+                    isSelecting = false
+                    setSelectRect(null)
+
+                    const rect = el.getBoundingClientRect()
+                    const x = event.clientX - rect.left
+                    const y = event.clientY - rect.top
+                    const left = Math.min(selStartX, x), right = Math.max(selStartX, x)
+                    const top = Math.min(selStartY, y), bottom = Math.max(selStartY, y)
+                    if (right - left < 4 && bottom - top < 4) return//a click, not a drag
+
+                    //a datapoint is selected if its pixel position falls inside the rectangle
+                    const selected = sp500data.filter(d => {//converts all datapoints to coords and returns list that only contains data with coords inside the rectangle
+                        const px = ts.timeToCoordinate(d.time)
+                        const py = areaSeries.priceToCoordinate(d.value)
+                        return px !== null && py !== null && px >= left && px <= right && py >= top && py <= bottom
+                    })
+                    if (selected.length === 0) return//dragged over nothing, so no input box
+
+                    setSelectedPoints(selected)
+                    setInputPos({ x, y })
+                    setShowInput(true)
+                }, { signal })
+
                 //LLM call//
                 //On click, i want llm call
                 chart.subscribeDblClick(async (param) =>{//adds a chart click listener
@@ -91,13 +149,15 @@ export default function Chart () {
             }
             init()//call the async function since useeffect can't be async
 
-            return () => chart.remove()//cleanup function for chart.
+            return () => { listenerCleanup.abort(); chart.remove() }//cleanup function for listeners and chart.
         }, [])
 
 
 
     return <>
         <div ref={chartContainerRef} className="relative w-full h-full" />
+        {selectRect && <div className="absolute border border-blue-500 bg-blue-500/20 z-10 pointer-events-none"
+            style={{ left: selectRect.left, top: selectRect.top, width: selectRect.width, height: selectRect.height }} />}
         {showInput && inputPos && <div className="text-red-300 absolute z-10" style={{ left: inputPos.x, top: inputPos.y }}>
             <input value={userMessage} placeholder="What would you like to know?" 
             onChange={e => setUserMessage(e.target.value)} 

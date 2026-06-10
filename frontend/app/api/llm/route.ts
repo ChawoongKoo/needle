@@ -4,24 +4,39 @@ import { json } from "stream/consumers";
 export async function POST(request: Request) {
     // console.log('hit post on api/llm')
     const body = await request.json()
-    const {messages, time, value} = body
-    
+    const {messages, time, value, selectedPoints} = body
+
     //initiliaze new client object using my hugging face token from .env
     const client = new InferenceClient(process.env.HF_KEY);
-    console.log(`${messages.at(-1).content}. Date of SP500: ${time}, Value of SP500 on that date: ${value.value}`)
-    
+
+    //time/value come from a double-click, selectedPoints from a marquee drag — either may be absent
+    const points: {time: string, value: number}[] = selectedPoints ?? []
+    const singlePoint = value ? `Date of SP500: ${time}, Value of SP500 on that date: ${value.value}` : ''
+    const rangeText = points.length ? `SP500 date range: ${points[0].time} to ${points.at(-1)!.time}` : ''
+
+    const embedMessage = [messages.at(-1).content, singlePoint, rangeText].filter(Boolean).join('. ')
+    console.log(embedMessage)
+
     //embed user query here//
     const query_matches = await fetch(`${process.env.BACKEND_ENDPOINT}/query_matches`,{
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-            message: `${messages.at(-1).content}. Date of SP500: ${time}, Value of SP500 on that date: ${value.value}`
+            message: embedMessage
         })
     })
 
     //retrieve top 3 most relevant chunks//
     const {matches} = await query_matches.json()
     console.log(matches)
+
+    //downsample large selections to at most ~100 points so the prompt stays small
+    const step = Math.max(1, Math.ceil(points.length / 100))
+    const pointsText = points.filter((_, i) => i % step === 0).map(p => `${p.time}:${p.value}`).join(', ')
+    const dataContext = [
+        singlePoint,
+        pointsText ? `Selected SP500 datapoints (date:value): ${pointsText}` : ''
+    ].filter(Boolean).join('\n')
 
     const stream = client.chatCompletionStream({
         model: "deepseek-ai/DeepSeek-V4-Flash:novita",
@@ -37,7 +52,7 @@ export async function POST(request: Request) {
             ...messages,
             {
                 role: "user",
-                content: `Date: ${time}, SP500 Value:${value.value}`
+                content: dataContext
             }
         ]
     })
