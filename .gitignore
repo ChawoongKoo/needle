@@ -45,5 +45,6 @@ __pycache__/
 *.pyc
 .venv/
 
-# claude memory
+# claude files
 memory.md
+.playwright-mcp/
