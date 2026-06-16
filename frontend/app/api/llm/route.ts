@@ -37,7 +37,8 @@ export async function POST(request: Request) {
         singlePoint,
         pointsText ? `Selected SP500 datapoints (date:value): ${pointsText}` : ''
     ].filter(Boolean).join('\n')
-
+    console.log(dataContext)
+    
     const stream = client.chatCompletionStream({
         model: "deepseek-ai/DeepSeek-V4-Flash:novita",
         messages: [

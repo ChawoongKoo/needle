@@ -1,5 +1,5 @@
 "use client"
-import { AreaSeries, createChart, ColorType, IChartApi } from "lightweight-charts"
+import { AreaSeries, LineSeries, createChart, ColorType, IChartApi, ISeriesApi } from "lightweight-charts"
 import { useEffect, useRef, useState } from "react"
 import { useDashboardContext } from "../contexts/DashboardContext"
 
@@ -22,10 +22,14 @@ export default function Chart () {
         const context = useDashboardContext()
         if (!context) {return}
 
-        const {loading, setTimeValue, setSelectedPoints, sendUserMessage} = context
+        const {loading, setTimeValue, selectedPoints, setSelectedPoints, sendUserMessage} = context
 
         //create a reference for this container to refer to the dom element it sends.
         const chartContainerRef = useRef<HTMLDivElement>(null)
+
+        //refs so the highlight effect below can reach the series and data created inside init
+        const highlightSeriesRef = useRef<ISeriesApi<"Line"> | null>(null)
+        const dataRef = useRef<{time: string, value: number}[]>([])
 
 
         //states related to input bar
@@ -62,9 +66,16 @@ export default function Chart () {
 
                 //Set the data//
                 const sp500data = await getSP500Data();
-                
+
                 areaSeries.setData(sp500data);
                 chart.timeScale().fitContent();//fits the data to time scale
+
+                //highlight series drawn on top of the area series to mark the selected datapoints
+                highlightSeriesRef.current = chart.addSeries(LineSeries, {
+                    color: '#FF6D00', lineWidth: 3,
+                    lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false//hide the extra axis label, price line and crosshair dot this series would add
+                })
+                dataRef.current = sp500data
 
                 //enable scrolling and scaling//
                 //on right click, i want panning
@@ -151,6 +162,14 @@ export default function Chart () {
 
             return () => { listenerCleanup.abort(); chart.remove() }//cleanup function for listeners and chart.
         }, [])
+
+        //redraw the highlight whenever the selection changes; clearing the selection clears the highlight
+        useEffect(() => {
+            if (!highlightSeriesRef.current) return
+            const selectedTimes = new Set(selectedPoints.map(p => p.time))
+            //non-selected points become whitespace ({time} only) so the highlight leaves gaps instead of bridging them
+            highlightSeriesRef.current.setData(dataRef.current.map(d => selectedTimes.has(d.time) ? d : { time: d.time }))
+        }, [selectedPoints])
 
 
 
