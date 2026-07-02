@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -8,12 +7,25 @@
     --border: #334155;
     --foreground: #F8FAFC;
     --muted: #94A3B8;
+    --accent: #3B82F6;
+    --accent-select: #D95926;
     --accent-green: #22C55E;
     --accent-red: #EF4444;
+}
+
+@theme inline {
+    --font-sans: var(--font-fira-sans);
+    --font-mono: var(--font-fira-code);
 }
 
 body {
     background: var(--bg);
     color: var(--foreground);
-    font-family: 'Fira Sans', sans-serif;
+    font-family: var(--font-fira-sans), sans-serif;
+}
+
+/* thin, dark scrollbars so the default gray bar doesn't break the theme */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
 }

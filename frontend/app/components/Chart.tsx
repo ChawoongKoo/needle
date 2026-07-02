@@ -51,16 +51,29 @@ export default function Chart () {
                 if (!chartContainerRef.current) return
                 
                 //set up chart//
-                const chartOptions = { 
-                    layout: { textColor: 'black', background: { type: ColorType.Solid, color: 'white' }, attributionLogo: false },
+                const chartOptions = {
+                    layout: {
+                        textColor: '#94A3B8',
+                        background: { type: ColorType.Solid, color: 'transparent' },//let the panel surface show through
+                        attributionLogo: false,
+                        fontFamily: getComputedStyle(chartContainerRef.current).fontFamily
+                    },
+                    grid: {
+                        vertLines: { color: 'rgba(51, 65, 85, 0.35)' },
+                        horzLines: { color: 'rgba(51, 65, 85, 0.35)' }
+                    },
+                    rightPriceScale: { borderVisible: false },
+                    timeScale: { borderVisible: false },
+                    autoSize: true,//resize with the panel
                     handleScroll: false, //this removes default scrolling and scaling
-                    handleScale: false 
+                    handleScale: false
                 };
                 chart = createChart(chartContainerRef.current, chartOptions)
 
                 const areaSeries = chart.addSeries(AreaSeries, {
-                    lineColor: '#2962FF', topColor: '#2962FF',
-                    bottomColor: 'rgba(41, 20, 255, 0.28)',
+                    lineColor: '#3B82F6', lineWidth: 2,
+                    topColor: 'rgba(59, 130, 246, 0.25)',
+                    bottomColor: 'rgba(59, 130, 246, 0)',
                 });
                 
 
@@ -72,7 +85,7 @@ export default function Chart () {
 
                 //highlight series drawn on top of the area series to mark the selected datapoints
                 highlightSeriesRef.current = chart.addSeries(LineSeries, {
-                    color: '#FF6D00', lineWidth: 3,
+                    color: '#D95926', lineWidth: 3,
                     lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false//hide the extra axis label, price line and crosshair dot this series would add
                 })
                 dataRef.current = sp500data
@@ -175,15 +188,19 @@ export default function Chart () {
 
     return <>
         <div ref={chartContainerRef} className="relative w-full h-full" />
-        {selectRect && <div className="absolute border border-blue-500 bg-blue-500/20 z-10 pointer-events-none"
+        {selectRect && <div className="absolute border border-blue-400/70 bg-blue-400/10 z-10 pointer-events-none"
             style={{ left: selectRect.left, top: selectRect.top, width: selectRect.width, height: selectRect.height }} />}
-        {showInput && inputPos && <div className="text-red-300 absolute z-10" style={{ left: inputPos.x, top: inputPos.y }}>
-            <input value={userMessage} placeholder="What would you like to know?" 
-            onChange={e => setUserMessage(e.target.value)} 
+        {showInput && inputPos && <div className="absolute z-10 flex gap-2 rounded-xl p-2 shadow-xl shadow-black/40"
+            style={{ left: inputPos.x, top: inputPos.y, background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+            <input value={userMessage} placeholder="What would you like to know?"
+            onChange={e => setUserMessage(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') sendUserMessage( userMessage, setUserMessage ) }}
-            className="bg-white border border-black p-1 w-57 text-black"/>
+            className="bg-transparent px-2 py-1.5 w-64 text-sm outline-none placeholder:text-slate-500"
+            style={{ color: "var(--foreground)" }}/>
 
-            <button 
+            <button
+            className="shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-default"
+            style={{ background: "var(--accent)", color: "#fff" }}
             onClick={() => sendUserMessage(userMessage, setUserMessage)}
             disabled={loading}
             >{
