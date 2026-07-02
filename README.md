@@ -4,6 +4,9 @@ An interactive S&P 500 dashboard that lets you explore market history and query 
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-blue) ![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8) ![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688)
 
+<img width="1437" height="702" alt="Screenshot 2026-07-02 at 2 59 45 AM" src="https://github.com/user-attachments/assets/941f67e0-9480-49a1-9d2c-7726c567c600" />
+
+
 ## Features
 
 - **Interactive S&P 500 chart** — 10 years of historical index data rendered with [Lightweight Charts](https://tradingview.github.io/lightweight-charts/)
