@@ -27,8 +27,9 @@ export default function Chart () {
         //create a reference for this container to refer to the dom element it sends.
         const chartContainerRef = useRef<HTMLDivElement>(null)
 
-        //refs so the highlight effect below can reach the series and data created inside init
-        const highlightSeriesRef = useRef<ISeriesApi<"Line"> | null>(null)
+        //refs so the highlight effect below can reach the chart and data created inside init
+        const chartRef = useRef<IChartApi | null>(null)
+        const highlightSeriesRef = useRef<ISeriesApi<"Line">[]>([])//one series per contiguous run of selected points
         const dataRef = useRef<{time: string, value: number}[]>([])
 
 
@@ -83,11 +84,15 @@ export default function Chart () {
                 areaSeries.setData(sp500data);
                 chart.timeScale().fitContent();//fits the data to time scale
 
+<<<<<<< Updated upstream
                 //highlight series drawn on top of the area series to mark the selected datapoints
                 highlightSeriesRef.current = chart.addSeries(LineSeries, {
                     color: '#D95926', lineWidth: 3,
                     lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false//hide the extra axis label, price line and crosshair dot this series would add
                 })
+=======
+                chartRef.current = chart//the highlight effect below adds its series through this
+>>>>>>> Stashed changes
                 dataRef.current = sp500data
 
                 //enable scrolling and scaling//
@@ -173,15 +178,34 @@ export default function Chart () {
             }
             init()//call the async function since useeffect can't be async
 
-            return () => { listenerCleanup.abort(); chart.remove() }//cleanup function for listeners and chart.
+            return () => { listenerCleanup.abort(); chart.remove(); chartRef.current = null; highlightSeriesRef.current = [] }//cleanup function for listeners and chart.
         }, [])
 
         //redraw the highlight whenever the selection changes; clearing the selection clears the highlight
         useEffect(() => {
-            if (!highlightSeriesRef.current) return
+            const chart = chartRef.current
+            if (!chart) return
+            highlightSeriesRef.current.forEach(series => chart.removeSeries(series))
+
+            //split the selection into contiguous runs of datapoints — a line series always connects its points
+            //(whitespace items don't break the line), so each run needs its own series to keep the gaps empty
             const selectedTimes = new Set(selectedPoints.map(p => p.time))
-            //non-selected points become whitespace ({time} only) so the highlight leaves gaps instead of bridging them
-            highlightSeriesRef.current.setData(dataRef.current.map(d => selectedTimes.has(d.time) ? d : { time: d.time }))
+            const runs: {time: string, value: number}[][] = []
+            let run: {time: string, value: number}[] = []
+            for (const d of dataRef.current) {
+                if (selectedTimes.has(d.time)) run.push(d)
+                else if (run.length > 0) { runs.push(run); run = [] }
+            }
+            if (run.length > 0) runs.push(run)
+
+            highlightSeriesRef.current = runs.map(points => {
+                const series = chart.addSeries(LineSeries, {
+                    color: '#D95926', lineWidth: 3,
+                    lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false//hide the extra axis label, price line and crosshair dot each series would add
+                })
+                series.setData(points)
+                return series
+            })
         }, [selectedPoints])
 
 
