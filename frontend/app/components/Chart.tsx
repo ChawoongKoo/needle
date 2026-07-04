@@ -84,15 +84,7 @@ export default function Chart () {
                 areaSeries.setData(sp500data);
                 chart.timeScale().fitContent();//fits the data to time scale
 
-<<<<<<< Updated upstream
-                //highlight series drawn on top of the area series to mark the selected datapoints
-                highlightSeriesRef.current = chart.addSeries(LineSeries, {
-                    color: '#D95926', lineWidth: 3,
-                    lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false//hide the extra axis label, price line and crosshair dot this series would add
-                })
-=======
                 chartRef.current = chart//the highlight effect below adds its series through this
->>>>>>> Stashed changes
                 dataRef.current = sp500data
 
                 //enable scrolling and scaling//
